@@ -4,7 +4,7 @@ Created on Mon Feb 18 18:02:26 2019
 
 @author: guill
 """
-'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -18,13 +18,13 @@ import imp
 import torch_utils; imp.reload(torch_utils)
 #from Loss_Function import Haversine_Loss
 from torch_utils import gpu, minibatch, shuffle , Haversine_Loss
-'''
+
 
 data_train=pd.read_csv('C:\\Users\\guill\\Documents\\Cours\\Polytechnique\\3A\\MAP583 Apprentisage Profond\\Projet\\data\\train.csv')
 data_test=pd.read_csv('C:\\Users\\guill\\Documents\\Cours\\Polytechnique\\3A\\MAP583 Apprentisage Profond\\Projet\\data\\test.csv')
 
 #j'ai pris un petit nombre juste pour le faire tourner et debuguer
-littleTrain=data_train.iloc[:100000][data_train.MISSING_DATA!=True].sample(frac=1)
+littleTrain=data_train.iloc[:10000][data_train.MISSING_DATA!=True].sample(frac=1)
 littleTest=data_train.iloc[-1000:][data_train.MISSING_DATA!=True].sample(frac=1)
 
 #dans arrive y a la destination et chemin c'est le debut de la trajectoire (j'ai prit 10 points)
@@ -52,12 +52,12 @@ for i in range(len(littleTest),len(littleTrain)):
         train_arrive[i]=tr[-2:]
 
 #juste j'enlève les trajectoires non sélectionnées
-deleteTrain=np.asarray(np.where(train_arrive[:,0]!=0)).reshape(-1)
-deleteTest=np.asarray(np.where(test_arrive[:,0]!=0)).reshape(-1)
-train_arrive=train_arrive[deleteTrain]
-train_chemin=itemgetter(*deleteTrain)(train_chemin)
-test_arrive=test_arrive[deleteTest]
-test_chemin=itemgetter(*deleteTest)(test_chemin)
+keepTrain=np.asarray(np.where(train_arrive[:,0]!=0)).reshape(-1)
+keepTest=np.asarray(np.where(test_arrive[:,0]!=0)).reshape(-1)
+train_arrive=train_arrive[keepTrain]
+train_chemin=itemgetter(*keepTrain)(train_chemin)
+test_arrive=test_arrive[keepTest]
+test_chemin=itemgetter(*keepTest)(test_chemin)
 
 #dico taxiid vers embeddingid
 #j'ai testé: les taxis présents dans le test set sont présents dans le train
@@ -65,20 +65,27 @@ dictTaxi={}
 idTaxi_train=np.unique(data_train['TAXI_ID'])
 nbrTaxi=len(idTaxi_train)
 for i,tx in enumerate(idTaxi_train):
-    dictTaxi[tx]=i
+    if(tx not in dictTaxi.keys()):
+        dictTaxi[tx]=i
 
 dictClient={}
 idClient_train=np.unique(data_train['ORIGIN_CALL'])
-nbrTaxi=len(idClient_train)
+idClient_train=idClient_train[~np.isnan(idClient_train)]
+nbrClient=len(idClient_train)
 for i,cl in enumerate(idClient_train):
-    dictClient[tx]=i
+    if (int(cl) not in dictClient.keys()):
+        dictClient[int(cl)]=i
+#je rajoute une dernière case en mettant tous les nan dans cette case
+#c-a-d les personnes dont on ne connaît pas l'identité sont considérés comme la même personne
+numClNan=int(cl)+1
+dictClient[numClNan]=i+1
 
 #la il faudrait prendre d'autres métadata mais j'ai pas fait encore
-metadata_train=littleTrain[['TAXI_ID','TIMESTAMP','ORIGIN_CALL','ORIGIN_STAND','DAYTYPE']]
-metadata_test=littleTest[['TAXI_ID','TIMESTAMP','ORIGIN_CALL','ORIGIN_STAND','DAYTYPE']]
+metadata_train=littleTrain[['TAXI_ID','TIMESTAMP','ORIGIN_STAND']].copy()
+metadata_test=littleTest[['TAXI_ID','TIMESTAMP','ORIGIN_STAND']].copy()
 #je supprime les données n'ayant pas passé le cut 
-x = metadata_train.values[deleteTrain] 
-xtest=metadata_test.values[deleteTest]
+x = metadata_train.values[keepTrain] 
+xtest=metadata_test.values[keepTest]
 
 taxi_train_ids=x[:,0]
 taxi_test_ids=xtest[:,0]
@@ -86,21 +93,27 @@ taxi_test_ids=xtest[:,0]
 taxi_train_ids=np.asarray([dictTaxi.get(key) for key in taxi_train_ids])
 taxi_test_ids=np.asarray([dictTaxi.get(key) for key in taxi_test_ids])
 
-client_train_ids=x[:,2]
-client_test_ids=xtest[:,2]
+
+client_train_ids=littleTrain['ORIGIN_CALL'].copy()
+client_test_ids=littleTest['ORIGIN_CALL'].copy()
+client_train_ids[np.isnan(client_train_ids)]=numClNan
+client_test_ids[np.isnan(client_test_ids)]=numClNan
+client_train_ids=client_train_ids.values[keepTrain]
+client_test_ids=client_test_ids.values[keepTest]
 #je vais chercher leur id embeddings dans le dico
 client_train_ids=np.asarray([dictClient.get(key) for key in client_train_ids])
-client_test_ids=np.asarray([dictTaxi.get(key) for key in client_test_ids])
+client_test_ids=np.asarray([dictClient.get(key) for key in client_test_ids])
 
+#il faudrait juste supprimer les lignes comme fait pour les metadonnees précédentes
 jourtype=np.array(['A','B','C'])
-daytyp_train=x[:,4]
-daytyp_test=xtest[:,4]
+daytyp_train=littleTrain['DAY_TYPE'].copy()
+daytyp_test=littleTest['DAY_TYPE'].copy()
 #je vais chercher leur id embeddings dans le dico
-daytyp_train=np.asarray([np.where( jourtype == key) for key in daytyp_train])
-daytyp_test=np.asarray([np.where( jourtype == key) for key in daytyp_test])
+daytyp_train=np.asarray([np.asscalar(np.where( jourtype == key)[0]) for key in daytyp_train])
+daytyp_test=np.asarray([np.asscalar(np.where( jourtype == key)[0]) for key in daytyp_test])
 
-#origin_train=x[:,3]
-#origin_test=xtest[:,3]
+#origin_train=x[:,2]
+#origin_test=xtest[:,2]
 
 #normalisation du temps
 time_train=x[:,1].reshape(-1,1)
