@@ -6,11 +6,11 @@ from keras.models import Sequential
 from keras.optimizers import SGD, Adam, Adagrad
 from keras import backend as K
 from keras.layers.embeddings import Embedding
-from keras.layers.core import Dense, Reshape, Merge, Activation, Dropout
+from keras.layers.core import Dense, Reshape, Activation, Dropout
 from keras.callbacks import ModelCheckpoint
-from code.utils import tf_haversine
-from code.data import load_data
-from code.utils import get_clusters
+from utils import tf_haversine
+from data import load_data
+from utils import get_clusters
 
 
 def start_new_session():
@@ -148,11 +148,11 @@ def full_train(n_epochs=100, batch_size=200, save_prefix=None):
     """
     
     # Load initial data
-    print "Loading data..."
+    print("Loading data...")
     data = load_data()
 
     # Estimate the GPS clusters
-    print "Estimating clusters..."
+    print("Estimating clusters...")
     clusters = get_clusters(data.train_labels)
     
     # Set up callbacks
@@ -163,12 +163,12 @@ def full_train(n_epochs=100, batch_size=200, save_prefix=None):
         callbacks.append(ModelCheckpoint(file_path, monitor='val_loss', mode='min', save_weights_only=True, verbose=1))
 
     # Create model
-    print "Creating model..."
+    print("Creating model...")
     start_new_session()
     model = create_model(data.metadata, clusters)
     
     # Run the training
-    print "Start training..."
+    print("Start training...")
     history = model.fit(
         process_features(data.train), data.train_labels,
         nb_epoch=n_epochs, batch_size=batch_size,
