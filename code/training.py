@@ -7,6 +7,7 @@ from keras.optimizers import SGD, Adam, Adagrad
 from keras import backend as K
 from keras.layers.embeddings import Embedding
 from keras.layers.core import Dense, Reshape, Activation, Dropout
+from keras.layers import concatenate
 from keras.callbacks import ModelCheckpoint
 from utils import tf_haversine
 from data import load_data
@@ -123,7 +124,6 @@ def create_model(metadata, clusters):
 			
 	# Merge all the inputs into a single input layer
 	#Nouvelle version sans Merge
-	from keras.layers import concatenate
 	#ça remplace from.keras.layers import Merge
 	#ou bien Concatenate avec un grand c 
     model = Sequential()

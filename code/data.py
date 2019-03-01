@@ -141,7 +141,7 @@ def load_data():
         for kind in ['train', 'test']:
             # Load original CSV file
             csv_file = 'datasets/%s.csv' % kind
-            df = pd.read_csv(csv_file)
+            df = pd.read_csv(csv_file,nrows=1000)
             # Ignore items that are missing data
             df = df[df['MISSING_DATA'] == False]
             # Ignore items that don't have polylines
