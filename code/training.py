@@ -109,9 +109,25 @@ def create_model(metadata, clusters):
     coords = Sequential()
     coords.add(Dense(1, input_dim=20, init='normal'))
 
-    # Merge all the inputs into a single input layer
+    # # Merge all the inputs into a single input layer
+    # model = Sequential()
+    # model.add(Merge([
+                # embed_quarter_hour,
+                # embed_day_of_week,
+                # embed_week_of_year,
+                # embed_client_ids,
+                # embed_taxi_ids,
+                # embed_stand_ids,
+                # coords
+            # ], mode='concat'))
+			
+	# Merge all the inputs into a single input layer
+	#Nouvelle version sans Merge
+	from keras.layers import concatenate
+	#ça remplace from.keras.layers import Merge
+	#ou bien Concatenate avec un grand c 
     model = Sequential()
-    model.add(Merge([
+    model.add(concatenate([
                 embed_quarter_hour,
                 embed_day_of_week,
                 embed_week_of_year,
@@ -119,7 +135,7 @@ def create_model(metadata, clusters):
                 embed_taxi_ids,
                 embed_stand_ids,
                 coords
-            ], mode='concat'))
+            ]))
 
     # Simple hidden layer
     model.add(Dense(500))
