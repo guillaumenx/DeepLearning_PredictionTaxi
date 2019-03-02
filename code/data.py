@@ -111,7 +111,7 @@ def remove_outliers(df, labels):
     return df, labels
 
     
-def load_data():
+def load_data(nrows=None):
     """
     Loads data from CSV files, processes and caches it in pickles for faster future loading.
     """
@@ -141,7 +141,7 @@ def load_data():
         for kind in ['train', 'test']:
             # Load original CSV file
             csv_file = 'datasets/%s.csv' % kind
-            df = pd.read_csv(csv_file)
+            df = pd.read_csv(csv_file,nrows=nrows)
             # Ignore items that are missing data
             df = df[df['MISSING_DATA'] == False]
             # Ignore items that don't have polylines
