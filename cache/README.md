@@ -1,1 +1,0 @@
-A number of cache files created during the training files will automatically be copied in this folder.
