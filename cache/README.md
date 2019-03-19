@@ -1,1 +1,2 @@
-A number of cache files created during the training files will automatically be copied in this folder.
+Pour ne pas charger les fichiers à partir des csv à chaque fois 
+ainsi que pour stocker les modèles intermédiaires (à la fin de chaque époque)/
